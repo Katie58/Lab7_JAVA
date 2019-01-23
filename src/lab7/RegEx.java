@@ -120,19 +120,39 @@ static int index;
 	}
 	
 	private static boolean validateHtml(String html) {
-		String[] splitStr = html.trim().split("\\s+");
-		if (!splitStr[0].matches("<[\\w$]+>")) {
-			return false;
-		} else {
-			String element = "</" + splitStr[0].substring(1, splitStr[0].length());
-			if (element.matches(splitStr[splitStr.length -1])) {
-				return true;
-			} else {
+		boolean valid = true;
+		String tagPrefix;
+		String tagSuffix;
+		boolean tags = true;
+		while(valid && tags) {
+			html = html.trim();
+			int firstIndexLeft = html.indexOf("<");
+			int firstIndexRight = html.indexOf(">");
+			int lastIndexLeft = html.lastIndexOf("<");
+			int lastIndexRight = html.lastIndexOf(">");
+			if (firstIndexLeft != 0 || lastIndexRight != (html.length() - 1)) {
 				return false;
-			}
-		}
+			}	
+			
+			tagPrefix = html.substring(firstIndexLeft, firstIndexRight + 1);
+			tagSuffix = html.substring(lastIndexLeft, lastIndexRight + 1);
+			valid = validateHtmlTags(tagPrefix, tagSuffix);
+			
+			html = html.substring(firstIndexRight + 1, lastIndexLeft);
+			tags = ((html.indexOf("<") != -1) && (html.indexOf(">") != -1) && (html.indexOf("<") != html.lastIndexOf("<")) && (html.indexOf(">") != html.lastIndexOf(">")));
+		}  
+		return valid;
 		/////<p>  </p> is valid
 		/////<h1 </h1> is not valid
+	}
+	
+	private static boolean validateHtmlTags(String tagPrefix, String tagSuffix) {
+		if (!tagPrefix.matches("<[\\w$]+>")) {
+			return false;
+		} else {
+			String element = "</" + tagPrefix.substring(1, tagPrefix.length());
+			return element.matches(tagSuffix);
+		}	
 	}
 	
 	private static boolean retry() {
